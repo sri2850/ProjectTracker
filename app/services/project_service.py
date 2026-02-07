@@ -2,6 +2,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.db.models.project import Project
 from app.schemas.project import ProjectCreate
 from sqlalchemy import select
+from .errors import NotFound, Conflict, Unprocessable
 
 
 class ProjectService:
@@ -9,14 +10,25 @@ class ProjectService:
         self.db = db
 
     async def create_project(self, data: ProjectCreate):
-        project = Project(name=data.name)
+        name = data.name.strip() if data.name else ""
+        if not name:
+            raise Unprocessable(message="project name cannot be empty")
+        existing = await self.db.execute(select(Project).where(Project.name == name))
+        if existing.scalars().first() is not None:
+            raise Conflict(message="Project already exists", details={"name": name})
+        project = Project(name=name)
         self.db.add(project)
         await self.db.commit()
         await self.db.refresh(project)
         return project
 
     async def get_project_by_id(self, project_id: int):
-        return await self.db.get(Project, project_id)
+        project = await self.db.get(Project, project_id)
+        if project is None:
+            raise NotFound(
+                message="Project not found", details={"project_id": project_id}
+            )
+        return project
 
     async def fetch_all_projects(self):
         result = await self.db.execute(select(Project))

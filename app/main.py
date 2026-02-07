@@ -1,8 +1,8 @@
-from fastapi import FastAPI, Depends
+from fastapi import FastAPI
+from app.core.exception_handlers import register_exception_handlers
 from app.api.v1.router import router as api_router
 from app.db.session import engine
 from app.db.base import Base
-from typing import Annotated
 
 
 async def lifespan(app: FastAPI):
@@ -14,6 +14,7 @@ async def lifespan(app: FastAPI):
 
 def create_app() -> FastAPI:
     app = FastAPI(lifespan=lifespan)
+    register_exception_handlers(app)
     app.include_router(api_router)
     return app
 
