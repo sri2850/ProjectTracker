@@ -1,0 +1,54 @@
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+*.so
+*.egg-info/
+.eggs/
+*.egg
+.pytest_cache/
+.mypy_cache/
+.pytype/
+.pyre/
+.ruff_cache/
+.coverage
+coverage.xml
+htmlcov/
+
+# Virtual environments
+.venv/
+venv/
+ENV/
+env/
+.conda/
+
+# VS Code / JetBrains / OS
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+plan.md
+plan*.md
+
+# dotenv / secrets
+.env
+.env.*
+*.env
+
+# Logs
+*.log
+
+# SQLite / local db
+*.sqlite3
+*.db
+testdb
+
+# Uvicorn / FastAPI
+*.pid
+
+# Build artifacts
+build/
+dist/
+pip-wheel-metadata/
+scripts/
