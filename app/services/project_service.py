@@ -24,10 +24,10 @@ class ProjectService:
 
     async def get_project_by_id(self, project_id: int):
         project = await self.db.get(Project, project_id)
-        # if project is None:
-        #     raise NotFound(
-        #         message="Project not found", details={"project_id": project_id}
-        #     )
+        if project is None:
+            raise NotFound(
+                message="Project not found", details={"project_id": project_id}
+            )
         return project
 
     async def fetch_all_projects(self):
