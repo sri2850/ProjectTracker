@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import Any, Dict, Optional
+from typing import Any
 
 
 @dataclass(eq=False)
@@ -16,7 +16,7 @@ class DomainError(Exception):
 
     code: str
     message: str
-    details: Optional[Dict[str, Any]] = None
+    details: dict[str, Any] | None = None
 
     def __str__(self) -> str:
         return f"{self.code}: {self.message}"
@@ -28,7 +28,7 @@ class NotFound(DomainError):
         self,
         *,
         message: str = "Resource not found",
-        details: Optional[Dict[str, Any]] = None,
+        details: dict[str, Any] | None = None,
     ):
         super().__init__(code="not_found", message=message, details=details)
 
@@ -36,7 +36,7 @@ class NotFound(DomainError):
 # 409
 class Conflict(DomainError):
     def __init__(
-        self, *, message: str = "Conflict", details: Optional[Dict[str, Any]] = None
+        self, *, message: str = "Conflict", details: dict[str, Any] | None = None
     ):
         super().__init__(code="conflict", message=message, details=details)
 
@@ -44,7 +44,7 @@ class Conflict(DomainError):
 # 403
 class Forbidden(DomainError):
     def __init__(
-        self, *, message: str = "Forbidden", details: Optional[Dict[str, Any]] = None
+        self, *, message: str = "Forbidden", details: dict[str, Any] | None = None
     ):
         super().__init__(code="forbidden", message=message, details=details)
 
@@ -52,7 +52,7 @@ class Forbidden(DomainError):
 # 401 (usually boundary/auth dependency, but available if service must signal it)
 class Unauthorized(DomainError):
     def __init__(
-        self, *, message: str = "Unauthorized", details: Optional[Dict[str, Any]] = None
+        self, *, message: str = "Unauthorized", details: dict[str, Any] | None = None
     ):
         super().__init__(code="unauthorized", message=message, details=details)
 
@@ -63,6 +63,6 @@ class Unprocessable(DomainError):
         self,
         *,
         message: str = "Unprocessable entity",
-        details: Optional[Dict[str, Any]] = None,
+        details: dict[str, Any] | None = None,
     ):
         super().__init__(code="unprocessable_entity", message=message, details=details)

@@ -1,8 +1,8 @@
 # tests/test_projects.py
 import pytest
 
-from app.db.models.user import User
 from app.core.security import hash_password
+from app.db.models.user import User
 
 
 async def _login_get_token(client, db_session):

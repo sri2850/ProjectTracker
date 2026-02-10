@@ -1,8 +1,8 @@
 # tests/test_auth.py
 import pytest
 
-from app.db.models.user import User
 from app.core.security import hash_password  # whatever you named it
+from app.db.models.user import User
 
 
 @pytest.mark.asyncio

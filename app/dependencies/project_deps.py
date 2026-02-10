@@ -1,5 +1,6 @@
-from sqlalchemy.ext.asyncio import AsyncSession
 from fastapi import Depends
+from sqlalchemy.ext.asyncio import AsyncSession
+
 from app.dependencies.deps import get_db
 from app.services.project_service import ProjectService
 

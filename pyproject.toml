@@ -1,0 +1,17 @@
+[tool.ruff]
+line-length = 88
+target-version = "py311"
+extend-exclude = ["alembic/"]
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "B", "UP"]
+ignore = ["E501", "B008"] # to use functions as args, as fastapi dependencies works this way
+
+[tool.ruff.lint.isort]
+known-first-party = ["app"]
+
+[tool.mypy]
+exclude = "(^alembic/|^alembic\\\\)"
+ignore_missing_imports = true
+explicit_package_bases = true
+

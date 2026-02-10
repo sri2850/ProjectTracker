@@ -1,8 +1,9 @@
 from fastapi import APIRouter, Depends
-from app.schemas.project import ProjectRead, ProjectCreate
-from app.services.project_service import ProjectService
+
 from app.dependencies import project_deps
 from app.dependencies.auth_deps import get_current_user
+from app.schemas.project import ProjectCreate, ProjectRead
+from app.services.project_service import ProjectService
 
 router = APIRouter(dependencies=[Depends(get_current_user)])
 

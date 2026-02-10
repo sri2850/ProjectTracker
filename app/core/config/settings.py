@@ -10,4 +10,4 @@ class Settings(BaseSettings):
         env_file = "app/.env"
 
 
-settings = Settings()
+settings = Settings()  # type: ignore[call-arg]

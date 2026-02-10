@@ -1,8 +1,10 @@
+from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
+
 from app.db.models.project import Project
 from app.schemas.project import ProjectCreate
-from sqlalchemy import select
-from .errors import NotFound, Conflict, Unprocessable
+
+from .errors import Conflict, NotFound, Unprocessable
 
 
 class ProjectService:

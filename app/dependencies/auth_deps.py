@@ -5,7 +5,6 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.security import decode_access_token
 from app.dependencies.deps import get_db
-
 from app.repositories.user import get_user_by_id
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/api/v1/auth/login")
@@ -24,8 +23,7 @@ async def get_current_user(
         if not subject:
             raise credentials_exc
     except JWTError as e:
-        print("JWTError:", e)
-        raise credentials_exc
+        raise credentials_exc from e
     user = await get_user_by_id(db, int(subject))
     if not user:
         raise credentials_exc

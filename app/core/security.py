@@ -1,9 +1,11 @@
-from datetime import datetime, timedelta, timezone
+from datetime import UTC, datetime, timedelta
+
+import anyio
 import anyio.to_thread
 from jose import jwt
 from passlib.context import CryptContext
+
 from app.core.config.settings import settings
-import anyio
 
 secret_key = settings.SECRET_KEY
 algorithm = "HS256"
@@ -30,7 +32,7 @@ async def verify_password(plain_password, hashed_password):
 
 
 def create_access_token(subject, expires_minutes=access_token_expire_mintes):
-    now = datetime.now(timezone.utc)
+    now = datetime.now(UTC)
     expire = now + timedelta(minutes=expires_minutes)
     payload = {
         "sub": subject,

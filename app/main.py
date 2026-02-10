@@ -1,6 +1,7 @@
 from fastapi import FastAPI
-from app.core.exception_handlers import register_exception_handlers
+
 from app.api.v1.router import router as api_router
+from app.core.exception_handlers import register_exception_handlers
 
 
 async def lifespan(app: FastAPI):
