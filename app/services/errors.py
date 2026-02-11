@@ -66,3 +66,43 @@ class Unprocessable(DomainError):
         details: dict[str, Any] | None = None,
     ):
         super().__init__(code="unprocessable_entity", message=message, details=details)
+
+
+# 401 (missing token)
+class MissingToken(DomainError):
+    def __init__(
+        self, *, message="Missing Token", details: dict[str, Any] | None = None
+    ):
+        super().__init__(code="missing_token", message=message, details=details)
+
+
+# 401 (token_expired)
+class TokenExpired(DomainError):
+    def __init__(
+        self, *, message="Token Expired", details: dict[str, Any] | None = None
+    ):
+        super().__init__(code="token_expired", message=message, details=details)
+
+
+# 401 (invalid_token)
+class InvalidToken(DomainError):
+    def __init__(
+        self, *, message="Invalid Token", details: dict[str, Any] | None = None
+    ):
+        super().__init__(code="invalid_token", message=message, details=details)
+
+
+# 401 (invalid_credentials)
+class InvalidCredentials(DomainError):
+    def __init__(
+        self, *, message="Invalid Credentials", details: dict[str, Any] | None = None
+    ):
+        super().__init__(code="invalid_credentials", message=message, details=details)
+
+
+# 401 (inactive_user)
+class InactiveUser(DomainError):
+    def __init__(
+        self, *, message="Inactive User", details: dict[str, Any] | None = None
+    ):
+        super().__init__(code="inactive_user", message=message, details=details)

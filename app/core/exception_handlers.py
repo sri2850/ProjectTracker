@@ -7,7 +7,12 @@ from app.services.errors import (
     Conflict,
     DomainError,
     Forbidden,
+    InactiveUser,
+    InvalidCredentials,
+    InvalidToken,
+    MissingToken,
     NotFound,
+    TokenExpired,
     Unauthorized,
     Unprocessable,
 )
@@ -37,6 +42,26 @@ def register_exception_handlers(app: FastAPI) -> None:
     @app.exception_handler(Unprocessable)
     async def _(request: Request, exc: Unprocessable):
         return JSONResponse(_error_payload(exc.code, exc.message, exc.details), 422)
+
+    @app.exception_handler(InactiveUser)
+    async def _(request: Request, exc: InactiveUser):
+        return JSONResponse(_error_payload(exc.code, exc.message, exc.details), 401)
+
+    @app.exception_handler(InvalidCredentials)
+    async def _(request: Request, exc: InvalidCredentials):
+        return JSONResponse(_error_payload(exc.code, exc.message, exc.details), 401)
+
+    @app.exception_handler(MissingToken)
+    async def _(request: Request, exc: MissingToken):
+        return JSONResponse(_error_payload(exc.code, exc.message, exc.details), 401)
+
+    @app.exception_handler(TokenExpired)
+    async def _(request: Request, exc: TokenExpired):
+        return JSONResponse(_error_payload(exc.code, exc.message, exc.details), 401)
+
+    @app.exception_handler(InvalidToken)
+    async def _(request: Request, exc: InvalidToken):
+        return JSONResponse(_error_payload(exc.code, exc.message, exc.details), 401)
 
     # Normalize framework-origin errors to your format (keeps “consistent error response” true)
     @app.exception_handler(RequestValidationError)
