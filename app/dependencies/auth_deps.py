@@ -1,12 +1,18 @@
-from fastapi import Depends, HTTPException, status
+from fastapi import Depends
 from fastapi.security import OAuth2PasswordBearer
 from jose import JWTError
+from jose.exceptions import ExpiredSignatureError
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.security import decode_access_token
 from app.dependencies.deps import get_db
 from app.repositories.user import get_user_by_id
-from app.services.errors import MissingToken
+from app.services.errors import (
+    InactiveUser,
+    InvalidToken,
+    MissingToken,
+    TokenExpired,
+)
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/api/v1/auth/login", auto_error=False)
 
@@ -14,24 +20,22 @@ oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/api/v1/auth/login", auto_error=F
 async def get_current_user(
     token: str = Depends(oauth2_scheme), db: AsyncSession = Depends(get_db)
 ):
-    credentials_exc = HTTPException(
-        status_code=status.HTTP_401_UNAUTHORIZED,
-        detail="Could not validate credentials",
-    )
     try:
         if not token:
-            raise MissingToken
+            raise MissingToken()
         payload = decode_access_token(token)
         subject = payload.get("sub")
-        if not subject:
-            raise credentials_exc
+        try:
+            user_id = int(subject)
+        except (TypeError, ValueError) as e:
+            raise InvalidToken() from e
     except JWTError as e:
-        raise credentials_exc from e
-    user = await get_user_by_id(db, int(subject))
+        raise InvalidToken() from e
+    except ExpiredSignatureError as e:
+        raise TokenExpired() from e
+    user = await get_user_by_id(db, user_id)
     if not user:
-        raise credentials_exc
+        raise InvalidToken()
     if not user.is_active:
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN, detail="Inactive user"
-        )
+        raise InactiveUser()
     return user

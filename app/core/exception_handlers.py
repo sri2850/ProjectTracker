@@ -45,7 +45,7 @@ def register_exception_handlers(app: FastAPI) -> None:
 
     @app.exception_handler(InactiveUser)
     async def _(request: Request, exc: InactiveUser):
-        return JSONResponse(_error_payload(exc.code, exc.message, exc.details), 401)
+        return JSONResponse(_error_payload(exc.code, exc.message, exc.details), 403)
 
     @app.exception_handler(InvalidCredentials)
     async def _(request: Request, exc: InvalidCredentials):

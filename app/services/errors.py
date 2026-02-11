@@ -100,7 +100,7 @@ class InvalidCredentials(DomainError):
         super().__init__(code="invalid_credentials", message=message, details=details)
 
 
-# 401 (inactive_user)
+# 403 (inactive_user)
 class InactiveUser(DomainError):
     def __init__(
         self, *, message="Inactive User", details: dict[str, Any] | None = None
