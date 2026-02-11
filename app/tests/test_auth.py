@@ -1,7 +1,10 @@
 # tests/test_auth.py
 import pytest
 
-from app.core.security import hash_password  # whatever you named it
+from app.core.security import (
+    create_access_token,
+    hash_password,
+)  # whatever you named it
 from app.db.models.user import User
 
 
@@ -61,3 +64,26 @@ async def test_protected__valid_token__returns_200(client, db_session):
 
     # Assert
     assert resp.status_code == 200
+
+
+@pytest.mark.asyncio
+async def test_expired_token_returns_401(client, db_session):
+    user = User(
+        username="sri",
+        email="a@b.com",
+        hashed_password=await hash_password("pass123"),
+    )
+    db_session.add(user)
+    await db_session.commit()
+    await db_session.refresh(user)
+
+    # Make an already-expired token (exp in the past)
+    token = create_access_token(subject=str(user.id), expires_minutes=-1)
+
+    # Act
+    resp = await client.get(
+        "/api/v1/projects/", headers={"Authorization": f"Bearer {token}"}
+    )
+    assert resp.status_code == 401
+    body = resp.json()
+    assert body["error"]["code"] == "token_expired"

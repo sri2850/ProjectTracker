@@ -20,19 +20,19 @@ oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/api/v1/auth/login", auto_error=F
 async def get_current_user(
     token: str = Depends(oauth2_scheme), db: AsyncSession = Depends(get_db)
 ):
+    if not token:
+        raise MissingToken()
     try:
-        if not token:
-            raise MissingToken()
         payload = decode_access_token(token)
-        subject = payload.get("sub")
-        try:
-            user_id = int(subject)
-        except (TypeError, ValueError) as e:
-            raise InvalidToken() from e
-    except JWTError as e:
-        raise InvalidToken() from e
     except ExpiredSignatureError as e:
         raise TokenExpired() from e
+    except JWTError as e:
+        raise InvalidToken() from e
+    subject = payload.get("sub")
+    try:
+        user_id = int(subject)
+    except (TypeError, ValueError) as e:
+        raise InvalidToken() from e
     user = await get_user_by_id(db, user_id)
     if not user:
         raise InvalidToken()

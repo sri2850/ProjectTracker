@@ -43,4 +43,4 @@ def create_access_token(subject, expires_minutes=access_token_expire_mintes):
 
 
 def decode_access_token(token):
-    return jwt.decode(token, secret_key, algorithm)
+    return jwt.decode(token, secret_key, algorithms=[algorithm])
