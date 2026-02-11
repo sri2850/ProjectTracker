@@ -6,8 +6,9 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.core.security import decode_access_token
 from app.dependencies.deps import get_db
 from app.repositories.user import get_user_by_id
+from app.services.errors import MissingToken
 
-oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/api/v1/auth/login")
+oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/api/v1/auth/login", auto_error=False)
 
 
 async def get_current_user(
@@ -18,6 +19,8 @@ async def get_current_user(
         detail="Could not validate credentials",
     )
     try:
+        if not token:
+            raise MissingToken
         payload = decode_access_token(token)
         subject = payload.get("sub")
         if not subject:
