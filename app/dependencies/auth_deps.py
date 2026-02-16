@@ -21,13 +21,13 @@ async def get_current_user(
     token: str = Depends(oauth2_scheme), db: AsyncSession = Depends(get_db)
 ):
     if not token:
-        raise MissingToken()
+        raise MissingToken(message="Token is missing")
     try:
         payload = decode_access_token(token)
     except ExpiredSignatureError as e:
-        raise TokenExpired() from e
+        raise TokenExpired(message="Expired token") from e
     except JWTError as e:
-        raise InvalidToken() from e
+        raise InvalidToken(message="Invalid token") from e
     subject = payload.get("sub")
     try:
         user_id = int(subject)
@@ -37,5 +37,5 @@ async def get_current_user(
     if not user:
         raise InvalidToken()
     if not user.is_active:
-        raise InactiveUser()
+        raise InactiveUser(message="user is inactive")
     return user
