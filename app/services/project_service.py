@@ -41,3 +41,12 @@ class ProjectService:
             select(Project).where(Project.created_by == user_id)
         )
         return result.scalars().all()
+
+    async def update_project_by_id(
+        self, project_id: int, user_id: int, updated_project_name: str
+    ):
+        project = await self.get_project_by_id(project_id, user_id)
+        project.name = updated_project_name
+        await self.db.commit()
+        await self.db.refresh(project)
+        return project

@@ -5,6 +5,7 @@ from app.core.security import (
     create_access_token,
     hash_password,
 )  # whatever you named it
+from app.db.models.project import Project
 from app.db.models.user import User
 
 
@@ -87,3 +88,39 @@ async def test_expired_token_returns_401(client, db_session):
     assert resp.status_code == 401
     body = resp.json()
     assert body["error"]["code"] == "token_expired"
+
+
+@pytest.mark.asyncio
+async def test_user_cannot_read_other_users_project(client, db_session):
+    # Arrange: create 2 users and a project for user1
+    user1 = User(
+        username="user1",
+        email="user1@example.com",
+        hashed_password=await hash_password("pass123"),
+    )
+    db_session.add(user1)
+    await db_session.commit()
+
+    user2 = User(
+        username="user2",
+        email="user2@example.com",
+        hashed_password=await hash_password("pass123"),
+    )
+    db_session.add(user2)
+    await db_session.commit()
+
+    project = Project(name="Project 1", created_by=user1.id)
+    db_session.add(project)
+    await db_session.commit()
+
+    # Act: user2 tries to access user1's project
+    await db_session.refresh(user2)
+    token = create_access_token(subject=str(user2.id), expires_minutes=10)
+    resp = await client.get(
+        f"/api/v1/projects/{project.id}", headers={"Authorization": f"Bearer {token}"}
+    )
+
+    # Assert
+    assert resp.status_code == 403
+    body = resp.json()
+    assert body["error"]["code"] == "forbidden"
