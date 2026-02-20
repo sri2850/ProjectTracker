@@ -15,7 +15,7 @@ async def create_project_endpoint(
     svc: ProjectService = Depends(project_deps.get_project_service),
     current_user: User = Depends(get_current_user),
 ):
-    return await svc.create_project(project_in, current_user.id)
+    return await svc.create_project_service(project_in, current_user.id)
 
 
 @router.get(
@@ -27,7 +27,7 @@ async def get_project_endpoint(
     svc: ProjectService = Depends(project_deps.get_project_service),
     current_user: User = Depends(get_current_user),
 ):
-    return await svc.get_project_by_id(project_id, current_user.id)
+    return await svc.fetch_project_by_id(project_id, current_user.id)
 
 
 @router.get("/projects/")

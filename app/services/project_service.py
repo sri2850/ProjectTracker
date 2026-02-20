@@ -1,7 +1,12 @@
-from sqlalchemy import select
+from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.db.models.project import Project
+from app.repositories.project import (
+    create_project,
+    get_all_projects,
+    get_project_by_id,
+    save,
+)
 from app.schemas.project import ProjectCreate
 
 from .errors import Conflict, Forbidden, NotFound, Unprocessable
@@ -11,21 +16,22 @@ class ProjectService:
     def __init__(self, db: AsyncSession):
         self.db = db
 
-    async def create_project(self, data: ProjectCreate, user_id):
-        name = data.name.strip() if data.name else ""
+    async def create_project_service(self, data: ProjectCreate, user_id):
+        name = (data.name or "").strip()
         if not name:
-            raise Unprocessable(message="project name cannot be empty")
-        existing = await self.db.execute(select(Project).where(Project.name == name))
-        if existing.scalars().first() is not None:
-            raise Conflict(message="Project already exists", details={"name": name})
-        project = Project(name=name, created_by=user_id)
-        self.db.add(project)
-        await self.db.commit()
-        await self.db.refresh(project)
-        return project
+            raise Unprocessable(message="project cannot be empty")
+        try:
+            project = await create_project(self.db, name, user_id)
+            await self.db.commit()
+            return project
+        except IntegrityError as err:
+            await self.db.rollback()
+            raise Conflict(
+                message="project already exists", details={"name": name}
+            ) from err
 
-    async def get_project_by_id(self, project_id: int, user_id: int):
-        project = await self.db.get(Project, project_id)
+    async def fetch_project_by_id(self, project_id: int, user_id: int):
+        project = await get_project_by_id(self.db, project_id, user_id)
         if not project:
             raise NotFound(
                 message="Project not found", details={"project_id": project_id}
@@ -37,16 +43,16 @@ class ProjectService:
         return project
 
     async def fetch_all_projects(self, user_id: int):
-        result = await self.db.execute(
-            select(Project).where(Project.created_by == user_id)
-        )
-        return result.scalars().all()
+        result = await get_all_projects(self.db, user_id)
+        return result
 
     async def update_project_by_id(
         self, project_id: int, user_id: int, updated_project_name: str
     ):
-        project = await self.get_project_by_id(project_id, user_id)
+        project = await self.fetch_project_by_id(project_id, user_id)
+
+        if not project:
+            raise NotFound()
+
         project.name = updated_project_name
-        await self.db.commit()
-        await self.db.refresh(project)
-        return project
+        return await save(self.db, project)
