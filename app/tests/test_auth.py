@@ -7,6 +7,7 @@ from app.core.security import (
 )  # whatever you named it
 from app.db.models.project import Project
 from app.db.models.user import User
+from app.tests.conftest import login_and_get_token
 
 
 @pytest.mark.asyncio
@@ -115,12 +116,32 @@ async def test_user_cannot_read_other_users_project(client, db_session):
 
     # Act: user2 tries to access user1's project
     await db_session.refresh(user2)
-    token = create_access_token(subject=str(user2.id), expires_minutes=10)
+    # token = create_access_token(subject=str(user2.id), expires_minutes=10)
+    token = await login_and_get_token(client, user2.id, "pass123")
+    print(token)
     resp = await client.get(
         f"/api/v1/projects/{project.id}", headers={"Authorization": f"Bearer {token}"}
     )
+    print(resp.json())
 
     # Assert
     assert resp.status_code == 403
     body = resp.json()
     assert body["error"]["code"] == "forbidden"
+
+
+@pytest.mark.asyncio
+async def test_unauthenticated_access_returns_401(client, db_session):
+    user1 = User(
+        username="user1",
+        email="user1@example.com",
+        hashed_password=await hash_password("pass123"),
+    )
+    db_session.add(user1)
+    await db_session.commit()
+    project = Project(name="project1", created_by=user1.id)
+    db_session.add(project)
+    await db_session.commit()
+
+    resp = await client.get(f"/api/v1/projects/{project.id}")
+    assert resp.status_code == 401
