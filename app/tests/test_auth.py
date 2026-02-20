@@ -52,12 +52,7 @@ async def test_protected__valid_token__returns_200(client, db_session):
     db_session.add(user)
     await db_session.commit()
 
-    # Login to get token
-    login = await client.post(
-        "/api/v1/auth/login",
-        data={"username": str(user.id), "password": "pass123"},
-    )
-    token = login.json()["access_token"]
+    token = await login_and_get_token(client, user.id, "pass123")
 
     # Act
     resp = await client.get(
@@ -116,9 +111,8 @@ async def test_user_cannot_read_other_users_project(client, db_session):
 
     # Act: user2 tries to access user1's project
     await db_session.refresh(user2)
-    # token = create_access_token(subject=str(user2.id), expires_minutes=10)
     token = await login_and_get_token(client, user2.id, "pass123")
-    print(token)
+
     resp = await client.get(
         f"/api/v1/projects/{project.id}", headers={"Authorization": f"Bearer {token}"}
     )

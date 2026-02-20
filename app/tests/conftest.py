@@ -47,7 +47,6 @@ async def client(db_session: AsyncSession):
     app.dependency_overrides.clear()
 
 
-# @pytest.fixture(scope="function")
 async def login_and_get_token(client, user_id, password):
     response = await client.post(
         "/api/v1/auth/login",
