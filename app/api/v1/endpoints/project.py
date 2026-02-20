@@ -46,3 +46,12 @@ async def update_project_endpoint(
     current_user: User = Depends(get_current_user),
 ):
     return await svc.update_project_by_id(project_id, current_user.id, project_in.name)
+
+
+@router.delete("/projects/{project_id}")
+async def delete_project_endpoint(
+    project_id: int,
+    svc: ProjectService = Depends(project_deps.get_project_service),
+    current_user: User = Depends(get_current_user),
+):
+    return await svc.del_proj_by_id(project_id, current_user.id)

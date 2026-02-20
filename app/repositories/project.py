@@ -29,3 +29,7 @@ async def save(db: AsyncSession, project: Project) -> Project:
     await db.flush()
     await db.refresh(project)
     return project
+
+
+async def delete_project_by_id(db: AsyncSession, project: Project):
+    return await db.delete(project)

@@ -3,6 +3,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.repositories.project import (
     create_project,
+    delete_project_by_id,
     get_all_projects,
     get_project_by_id,
     save,
@@ -59,3 +60,12 @@ class ProjectService:
         except IntegrityError as err:
             await self.db.rollback()
             raise Conflict() from err
+
+    async def del_proj_by_id(self, project_id: int, user_id: int):
+        project = await self.fetch_project_by_id(project_id, user_id)
+        try:
+            await delete_project_by_id(self.db, project)
+            await self.db.commit()
+        except IntegrityError as err:
+            await self.db.rollback()
+            raise Conflict(message="cannot delete the project") from err
