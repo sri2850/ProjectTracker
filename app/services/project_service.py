@@ -9,7 +9,7 @@ from app.repositories.project import (
 )
 from app.schemas.project import ProjectCreate
 
-from .errors import Conflict, Forbidden, NotFound, Unprocessable
+from .errors import Conflict, NotFound, Unprocessable
 
 
 class ProjectService:
@@ -36,10 +36,6 @@ class ProjectService:
             raise NotFound(
                 message="Project not found", details={"project_id": project_id}
             )
-        if project.created_by != user_id:
-            raise Forbidden(
-                message="You're not authorized", details={"project_id": project_id}
-            )
         return project
 
     async def fetch_all_projects(self, user_id: int):
@@ -49,10 +45,17 @@ class ProjectService:
     async def update_project_by_id(
         self, project_id: int, user_id: int, updated_project_name: str
     ):
+        name = (updated_project_name or "").strip()
+
+        if not name:
+            raise Unprocessable(message="project cannot be empty")
+
         project = await self.fetch_project_by_id(project_id, user_id)
-
-        if not project:
-            raise NotFound()
-
-        project.name = updated_project_name
-        return await save(self.db, project)
+        try:
+            project.name = name
+            await save(self.db, project)
+            await self.db.commit()
+            return project
+        except IntegrityError as err:
+            await self.db.rollback()
+            raise Conflict() from err

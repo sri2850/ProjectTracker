@@ -26,6 +26,6 @@ async def create_project(db: AsyncSession, name, user_id):
 
 
 async def save(db: AsyncSession, project: Project) -> Project:
-    await db.commit()
+    await db.flush()
     await db.refresh(project)
     return project
