@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, status
 
 from app.db.models.user import User
 from app.dependencies import project_deps
@@ -9,7 +9,9 @@ from app.services.project_service import ProjectService
 router = APIRouter()
 
 
-@router.post("/projects/", response_model=ProjectRead)
+@router.post(
+    "/projects/", response_model=ProjectRead, status_code=status.HTTP_201_CREATED
+)
 async def create_project_endpoint(
     project_in: ProjectCreate,
     svc: ProjectService = Depends(project_deps.get_project_service),
@@ -19,8 +21,7 @@ async def create_project_endpoint(
 
 
 @router.get(
-    "/projects/{project_id}",
-    response_model=ProjectRead,
+    "/projects/{project_id}", response_model=ProjectRead, status_code=status.HTTP_200_OK
 )
 async def get_project_endpoint(
     project_id: int,
@@ -30,7 +31,7 @@ async def get_project_endpoint(
     return await svc.fetch_project_by_id(project_id, current_user)
 
 
-@router.get("/projects/")
+@router.get("/projects/", status_code=status.HTTP_200_OK)
 async def list_projects_endpoint(
     svc: ProjectService = Depends(project_deps.get_project_service),
     current_user: User = Depends(get_current_user),
@@ -38,7 +39,7 @@ async def list_projects_endpoint(
     return await svc.fetch_all_projects(current_user)
 
 
-@router.put("/projects/{project_id}")
+@router.put("/projects/{project_id}", status_code=status.HTTP_200_OK)
 async def update_project_endpoint(
     project_id: int,
     project_in: ProjectUpdate,
@@ -48,7 +49,7 @@ async def update_project_endpoint(
     return await svc.update_project_by_id(project_id, current_user, project_in.name)
 
 
-@router.delete("/projects/{project_id}")
+@router.delete("/projects/{project_id}", status_code=status.HTTP_204_NO_CONTENT)
 async def delete_project_endpoint(
     project_id: int,
     svc: ProjectService = Depends(project_deps.get_project_service),
