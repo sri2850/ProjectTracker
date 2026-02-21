@@ -29,6 +29,7 @@ async def get_current_user(
     except JWTError as e:
         raise InvalidToken(message="Invalid token") from e
     subject = payload.get("sub")
+    print(f"subject: {subject} and {payload}")
     try:
         user_id = int(subject)
     except (TypeError, ValueError) as e:

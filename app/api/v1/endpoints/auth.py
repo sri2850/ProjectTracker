@@ -14,7 +14,7 @@ router = APIRouter(prefix="/auth", tags=["auth"])
 async def login(
     form: OAuth2PasswordRequestForm = Depends(), db: AsyncSession = Depends(get_db)
 ):
-    user = await authenticate_user(db, id=int(form.username), password=form.password)
+    user = await authenticate_user(db, username=form.username, password=form.password)
     if not user:
         raise InvalidCredentials
     token = create_access_token(subject=str(user.id))
