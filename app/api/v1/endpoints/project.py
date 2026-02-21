@@ -3,7 +3,7 @@ from fastapi import APIRouter, Depends, status
 from app.db.models.user import User
 from app.dependencies import project_deps
 from app.dependencies.auth_deps import get_current_user
-from app.schemas.project import ProjectCreate, ProjectRead, ProjectUpdate
+from app.schemas.project import ProjectCreate, ProjectPatch, ProjectRead, ProjectUpdate
 from app.services.project_service import ProjectService
 
 router = APIRouter()
@@ -56,3 +56,17 @@ async def delete_project_endpoint(
     current_user: User = Depends(get_current_user),
 ):
     return await svc.del_proj_by_id(project_id, current_user)
+
+
+@router.patch("/projects/{project_id}", response_model=ProjectRead)
+async def patch_project_endpoint(
+    project_id: int,
+    project_in: ProjectPatch,
+    svc: ProjectService = Depends(project_deps.get_project_service),
+    current_user: User = Depends(get_current_user),
+):
+    return await svc.update_project_partial(
+        project_id,
+        current_user,
+        project_in,
+    )

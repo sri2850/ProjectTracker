@@ -9,7 +9,7 @@ from app.repositories.project import (
     get_project_by_id,
     save,
 )
-from app.schemas.project import ProjectCreate
+from app.schemas.project import ProjectCreate, ProjectPatch
 
 from .errors import Conflict, NotFound, Unprocessable
 
@@ -70,3 +70,21 @@ class ProjectService:
         except IntegrityError as err:
             await self.db.rollback()
             raise Conflict(message="cannot delete the project") from err
+
+    async def update_project_partial(
+        self,
+        project_id: int,
+        user: User,
+        update_data: ProjectPatch,
+    ):
+        project = await self.fetch_project_by_id(project_id, user)
+
+        if update_data.name is not None:
+            name = update_data.name.strip()
+            if not name:
+                raise Unprocessable(message="project cannot be empty")
+            project.name = name
+
+        await save(self.db, project)
+        await self.db.commit()
+        return project

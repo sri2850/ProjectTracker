@@ -9,6 +9,10 @@ class ProjectUpdate(BaseModel):
     name: str
 
 
+class ProjectPatch(BaseModel):
+    name: str
+
+
 class ProjectRead(BaseModel):
     id: int
     name: str
