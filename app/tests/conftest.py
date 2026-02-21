@@ -47,11 +47,11 @@ async def client(db_session: AsyncSession):
     app.dependency_overrides.clear()
 
 
-async def login_and_get_token(client, user_id, password):
+async def login_and_get_token(client, username, password):
     response = await client.post(
         "/api/v1/auth/login",
         data={
-            "username": str(user_id),
+            "username": username,
             "password": password,
         },
     )

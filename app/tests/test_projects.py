@@ -17,7 +17,7 @@ async def _login_get_token(client, db_session):
 
     login = await client.post(
         "/api/v1/auth/login",
-        data={"username": str(user.id), "password": "pass123"},
+        data={"username": user.username, "password": "pass123"},
     )
     return login.json()["access_token"]
 

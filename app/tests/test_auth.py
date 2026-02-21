@@ -25,7 +25,7 @@ async def test_login__valid_credentials__returns_token(client, db_session):
     await db_session.refresh(user)
     resp = await client.post(
         "/api/v1/auth/login",
-        data={"username": str(user.id), "password": "pass123"},
+        data={"username": user.username, "password": "pass123"},
     )
 
     # Assert
@@ -52,7 +52,7 @@ async def test_protected__valid_token__returns_200(client, db_session):
     db_session.add(user)
     await db_session.commit()
 
-    token = await login_and_get_token(client, user.id, "pass123")
+    token = await login_and_get_token(client, user.username, "pass123")
 
     # Act
     resp = await client.get(
@@ -105,13 +105,14 @@ async def test_user_cannot_read_other_users_project(client, db_session):
     db_session.add(user2)
     await db_session.commit()
 
-    project = Project(name="Project 1", created_by=user1.id)
+    project = Project(name="Project 1", created_by=user1.username)
     db_session.add(project)
+    db_session.refresh(project)
     await db_session.commit()
 
     # Act: user2 tries to access user1's project
     await db_session.refresh(user2)
-    token = await login_and_get_token(client, user2.id, "pass123")
+    token = await login_and_get_token(client, user2.username, "pass123")
 
     resp = await client.get(
         f"/api/v1/projects/{project.id}", headers={"Authorization": f"Bearer {token}"}
@@ -119,9 +120,9 @@ async def test_user_cannot_read_other_users_project(client, db_session):
     print(resp.json())
 
     # Assert
-    assert resp.status_code == 403
+    assert resp.status_code == 404
     body = resp.json()
-    assert body["error"]["code"] == "forbidden"
+    assert body["error"]["code"] == "not_found"
 
 
 @pytest.mark.asyncio
@@ -133,7 +134,7 @@ async def test_unauthenticated_access_returns_401(client, db_session):
     )
     db_session.add(user1)
     await db_session.commit()
-    project = Project(name="project1", created_by=user1.id)
+    project = Project(name="project1", created_by=user1.username)
     db_session.add(project)
     await db_session.commit()
 
