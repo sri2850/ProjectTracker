@@ -15,7 +15,7 @@ async def create_project_endpoint(
     svc: ProjectService = Depends(project_deps.get_project_service),
     current_user: User = Depends(get_current_user),
 ):
-    return await svc.create_project_service(project_in, current_user.id)
+    return await svc.create_project_service(project_in, current_user)
 
 
 @router.get(
@@ -27,7 +27,7 @@ async def get_project_endpoint(
     svc: ProjectService = Depends(project_deps.get_project_service),
     current_user: User = Depends(get_current_user),
 ):
-    return await svc.fetch_project_by_id(project_id, current_user.id)
+    return await svc.fetch_project_by_id(project_id, current_user)
 
 
 @router.get("/projects/")
@@ -35,7 +35,7 @@ async def list_projects_endpoint(
     svc: ProjectService = Depends(project_deps.get_project_service),
     current_user: User = Depends(get_current_user),
 ):
-    return await svc.fetch_all_projects(current_user.id)
+    return await svc.fetch_all_projects(current_user)
 
 
 @router.put("/projects/{project_id}")
@@ -45,7 +45,7 @@ async def update_project_endpoint(
     svc: ProjectService = Depends(project_deps.get_project_service),
     current_user: User = Depends(get_current_user),
 ):
-    return await svc.update_project_by_id(project_id, current_user.id, project_in.name)
+    return await svc.update_project_by_id(project_id, current_user, project_in.name)
 
 
 @router.delete("/projects/{project_id}")
@@ -54,4 +54,4 @@ async def delete_project_endpoint(
     svc: ProjectService = Depends(project_deps.get_project_service),
     current_user: User = Depends(get_current_user),
 ):
-    return await svc.del_proj_by_id(project_id, current_user.id)
+    return await svc.del_proj_by_id(project_id, current_user)
