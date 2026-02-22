@@ -1,3 +1,4 @@
+from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.security import hash_password
@@ -24,7 +25,11 @@ class UserService:
         if existing_email:
             raise Conflict(message="Email already exists")
         hashed = await hash_password(data.password)
-        user = await add_user(self.db, username, email, hashed)
-        await self.db.commit()
-        await self.db.refresh(user)
-        return user
+        try:
+            user = await add_user(self.db, username, email, hashed)
+            await self.db.commit()
+            await self.db.refresh(user)
+            return user
+        except IntegrityError as e:
+            await self.db.rollback()
+            raise e from Conflict(message="username already exists")
