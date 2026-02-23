@@ -9,7 +9,12 @@ from app.repositories.project import (
     get_project_by_id,
     save,
 )
-from app.schemas.project import ProjectCreate, ProjectPatch
+from app.schemas.project import (
+    ProjectCreate,
+    ProjectListMeta,
+    ProjectListResponse,
+    ProjectPatch,
+)
 
 from .errors import Conflict, NotFound, Unprocessable
 
@@ -40,9 +45,21 @@ class ProjectService:
             )
         return project
 
-    async def fetch_all_projects(self, user: User):
-        result = await get_all_projects(self.db, user.id)
-        return result
+    async def fetch_all_projects(self, *, limit: int, offset: int, user: User):
+        items, total = await get_all_projects(
+            self.db,
+            limit=limit,
+            offset=offset,
+            user_id=user.id,
+        )
+        return ProjectListResponse(
+            items=items,
+            meta=ProjectListMeta(
+                total=total,
+                limit=limit,
+                offset=offset,
+            ),
+        )
 
     async def update_project_by_id(
         self, project_id: int, user: User, updated_project_name: str

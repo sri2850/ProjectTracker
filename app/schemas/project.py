@@ -19,3 +19,14 @@ class ProjectRead(BaseModel):
 
     class Config:
         from_attributes = True
+
+
+class ProjectListMeta(BaseModel):
+    total: int
+    limit: int
+    offset: int
+
+
+class ProjectListResponse(BaseModel):
+    items: list[ProjectRead]
+    meta: ProjectListMeta

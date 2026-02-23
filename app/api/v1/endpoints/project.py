@@ -1,9 +1,15 @@
-from fastapi import APIRouter, Depends, status
+from fastapi import APIRouter, Depends, Query, status
 
 from app.db.models.user import User
 from app.dependencies import project_deps
 from app.dependencies.auth_deps import get_current_user
-from app.schemas.project import ProjectCreate, ProjectPatch, ProjectRead, ProjectUpdate
+from app.schemas.project import (
+    ProjectCreate,
+    ProjectListResponse,
+    ProjectPatch,
+    ProjectRead,
+    ProjectUpdate,
+)
 from app.services.project_service import ProjectService
 
 router = APIRouter()
@@ -31,12 +37,18 @@ async def get_project_endpoint(
     return await svc.fetch_project_by_id(project_id, current_user)
 
 
-@router.get("/projects/", status_code=status.HTTP_200_OK)
+@router.get(
+    "/projects/",
+    response_model=ProjectListResponse,
+    status_code=status.HTTP_200_OK,
+)
 async def list_projects_endpoint(
+    limit: int = Query(20, ge=1, le=100),
+    offset: int = Query(0, ge=0),
     svc: ProjectService = Depends(project_deps.get_project_service),
     current_user: User = Depends(get_current_user),
 ):
-    return await svc.fetch_all_projects(current_user)
+    return await svc.fetch_all_projects(limit=limit, offset=offset, user=current_user)
 
 
 @router.put("/projects/{project_id}", status_code=status.HTTP_200_OK)
