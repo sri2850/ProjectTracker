@@ -52,6 +52,7 @@ class ProjectService:
         offset: int,
         sort_by: str,
         order: str,
+        name: str,
         user: User,
     ):
         items, total = await get_all_projects(
@@ -60,6 +61,7 @@ class ProjectService:
             offset=offset,
             sort_by=sort_by,
             order=order,
+            name=name,
             user_id=user.id,
         )
         return ProjectListResponse(

@@ -49,11 +49,17 @@ async def list_projects_endpoint(
     offset: int = Query(0, ge=0),
     sort_by: Literal["id", "name"] = Query("id"),
     order: Literal["asc", "desc"] = Query("desc"),
+    name: str = Query(None, min_length=1),
     svc: ProjectService = Depends(project_deps.get_project_service),
     current_user: User = Depends(get_current_user),
 ):
     return await svc.fetch_all_projects(
-        limit=limit, offset=offset, sort_by=sort_by, order=order, user=current_user
+        limit=limit,
+        offset=offset,
+        sort_by=sort_by,
+        order=order,
+        name=name,
+        user=current_user,
     )
 
 

@@ -19,6 +19,7 @@ async def get_all_projects(
     offset: int,
     user_id: int,
     sort_by: str = "id",
+    name: str | None = None,
     order: str = "desc",
 ):
     # 1️⃣ Allowlist
@@ -31,11 +32,12 @@ async def get_all_projects(
 
     # 2️⃣ Filtering (base dataset)
     filtered_query = select(Project).where(Project.created_by == user_id)
+    if name is not None:
+        filtered_query = filtered_query.where(Project.name == name)
 
     # 3️⃣ Count (based only on filtering)
     count_query = select(func.count()).select_from(filtered_query.subquery())
-    total_result = await db.execute(count_query)
-    total = total_result.scalar_one()
+    total = (await db.execute(count_query)).scalar_one()
 
     # 4️⃣ Sorting
     if order == "asc":
