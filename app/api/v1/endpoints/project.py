@@ -1,3 +1,5 @@
+from typing import Literal
+
 from fastapi import APIRouter, Depends, Query, status
 
 from app.db.models.user import User
@@ -45,10 +47,14 @@ async def get_project_endpoint(
 async def list_projects_endpoint(
     limit: int = Query(20, ge=1, le=100),
     offset: int = Query(0, ge=0),
+    sort_by: Literal["id", "name"] = Query("id"),
+    order: Literal["asc", "desc"] = Query("desc"),
     svc: ProjectService = Depends(project_deps.get_project_service),
     current_user: User = Depends(get_current_user),
 ):
-    return await svc.fetch_all_projects(limit=limit, offset=offset, user=current_user)
+    return await svc.fetch_all_projects(
+        limit=limit, offset=offset, sort_by=sort_by, order=order, user=current_user
+    )
 
 
 @router.put("/projects/{project_id}", status_code=status.HTTP_200_OK)

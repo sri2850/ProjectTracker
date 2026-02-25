@@ -45,11 +45,21 @@ class ProjectService:
             )
         return project
 
-    async def fetch_all_projects(self, *, limit: int, offset: int, user: User):
+    async def fetch_all_projects(
+        self,
+        *,
+        limit: int,
+        offset: int,
+        sort_by: str,
+        order: str,
+        user: User,
+    ):
         items, total = await get_all_projects(
             self.db,
             limit=limit,
             offset=offset,
+            sort_by=sort_by,
+            order=order,
             user_id=user.id,
         )
         return ProjectListResponse(

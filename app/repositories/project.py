@@ -13,17 +13,47 @@ async def get_project_by_id(db: AsyncSession, project_id: int, user_id: int):
 
 
 async def get_all_projects(
-    db: AsyncSession, *, limit: int = 100, offset: int = 0, user_id: int
+    db: AsyncSession,
+    *,
+    limit: int,
+    offset: int,
+    user_id: int,
+    sort_by: str = "id",
+    order: str = "desc",
 ):
-    base_query = select(Project).where(Project.created_by == user_id)
-    count_query = select(func.count()).select_from(base_query.subquery())
+    # 1️⃣ Allowlist
+    ALLOWED_SORT_FIELDS = {
+        "id": Project.id,
+        "name": Project.name,
+    }
 
+    column = ALLOWED_SORT_FIELDS[sort_by]
+
+    # 2️⃣ Filtering (base dataset)
+    filtered_query = select(Project).where(Project.created_by == user_id)
+
+    # 3️⃣ Count (based only on filtering)
+    count_query = select(func.count()).select_from(filtered_query.subquery())
     total_result = await db.execute(count_query)
     total = total_result.scalar_one()
 
-    query = base_query.limit(limit).offset(offset)
+    # 4️⃣ Sorting
+    if order == "asc":
+        primary = column.asc()
+    else:
+        primary = column.desc()
+
+    # Add tie-breaker if sorting by non-unique column
+    if column is Project.id:
+        sorted_query = filtered_query.order_by(primary)
+    else:
+        sorted_query = filtered_query.order_by(primary, Project.id.desc())
+
+    # 5️⃣ Pagination
+    query = sorted_query.limit(limit).offset(offset)
     result = await db.execute(query)
     items = result.scalars().all()
+
     return items, total
 
 
