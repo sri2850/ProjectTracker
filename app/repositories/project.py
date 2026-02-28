@@ -12,6 +12,11 @@ async def get_project_by_id(db: AsyncSession, project_id: int, user_id: int):
     return result.scalar_one_or_none()
 
 
+# Allowlist → secure column mapping
+# Filtering → build base dataset
+# Count → count filtered dataset
+# Sorting → deterministic ordering
+# Pagination → slice data
 async def get_all_projects(
     db: AsyncSession,
     *,
