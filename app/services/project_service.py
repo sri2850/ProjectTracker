@@ -1,3 +1,7 @@
+import hashlib
+import json
+import logging
+
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -18,10 +22,37 @@ from app.schemas.project import (
 
 from .errors import Conflict, NotFound, Unprocessable
 
+logger = logging.getLogger(__name__)
+CACHE_TTL_SECONDS = 60
+CACHE_VER = "v1"
+
+
+def _projects_list_key(
+    *,
+    user_id: int,
+    limit: int,
+    offset: int,
+    sort_by: str,
+    order: str,
+    name: str | None,
+):
+    payload = {
+        "limit": limit,
+        "offset": offset,
+        "sort_by": sort_by,
+        "order": order,
+        "name": name,
+    }
+    fingerprint = hashlib.sha256(
+        json.dumps(payload, sort_keys=True).encode()
+    ).hexdigest()[:16]
+    return f"projects:list:{CACHE_VER}:{user_id}:{fingerprint}"
+
 
 class ProjectService:
-    def __init__(self, db: AsyncSession):
+    def __init__(self, db: AsyncSession, redis):
         self.db = db
+        self.redis = redis
 
     async def create_project_service(self, data: ProjectCreate, user: User):
         name = (data.name or "").strip()
@@ -55,6 +86,20 @@ class ProjectService:
         name: str,
         user: User,
     ):
+        cache_key = _projects_list_key(
+            user_id=user.id,
+            limit=limit,
+            offset=offset,
+            sort_by=sort_by,
+            order=order,
+            name=name,
+        )
+        cached = await self.redis.get(cache_key)
+        if cached:
+            logger.info("CACHE HIT %s", cache_key)
+            return ProjectListResponse.model_validate_json(cached)
+        logger.info("CACHE MISS %s", cache_key)
+
         items, total = await get_all_projects(
             self.db,
             limit=limit,
@@ -64,14 +109,12 @@ class ProjectService:
             name=name,
             user_id=user.id,
         )
-        return ProjectListResponse(
+        resp = ProjectListResponse(
             items=items,
-            meta=ProjectListMeta(
-                total=total,
-                limit=limit,
-                offset=offset,
-            ),
+            meta=ProjectListMeta(total=total, limit=limit, offset=offset),
         )
+        await self.redis.set(cache_key, resp.model_dump_json(), ex=CACHE_TTL_SECONDS)
+        return resp
 
     async def update_project_by_id(
         self, project_id: int, user: User, updated_project_name: str
