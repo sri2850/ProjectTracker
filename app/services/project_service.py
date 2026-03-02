@@ -54,6 +54,15 @@ class ProjectService:
         self.db = db
         self.redis = redis
 
+    async def _invalidate_projects_list_cache(self, user_id: int):
+        keys_set = f"projects:list:keys:{CACHE_VER}:{user_id}"
+
+        keys = await self.redis.smembers(keys_set)
+        if keys:
+            await self.redis.delete(*list(keys))
+        await self.redis.delete(keys_set)
+        logger.info("CACHE INVALIDATE user=%s keys=%s", user_id, len(keys))
+
     async def create_project_service(self, data: ProjectCreate, user: User):
         name = (data.name or "").strip()
         if not name:
@@ -61,6 +70,7 @@ class ProjectService:
         try:
             project = await create_project(self.db, name, user.id)
             await self.db.commit()
+            await self._invalidate_projects_list_cache(user.id)
             return project
         except IntegrityError as err:
             await self.db.rollback()
@@ -74,6 +84,7 @@ class ProjectService:
             raise NotFound(
                 message="Project not found", details={"project_id": project_id}
             )
+        await self._invalidate_projects_list_cache(user.id)
         return project
 
     async def fetch_all_projects(
@@ -94,6 +105,7 @@ class ProjectService:
             order=order,
             name=name,
         )
+
         cached = await self.redis.get(cache_key)
         if cached:
             logger.info("CACHE HIT %s", cache_key)
@@ -129,6 +141,7 @@ class ProjectService:
             project.name = name
             await save(self.db, project)
             await self.db.commit()
+            await self._invalidate_projects_list_cache(user.id)
             return project
         except IntegrityError as err:
             await self.db.rollback()
@@ -138,6 +151,7 @@ class ProjectService:
         project = await self.fetch_project_by_id(project_id, user)
         try:
             await delete_project_by_id(self.db, project)
+            await self._invalidate_projects_list_cache(user.id)
             await self.db.commit()
         except IntegrityError as err:
             await self.db.rollback()
@@ -159,4 +173,5 @@ class ProjectService:
 
         await save(self.db, project)
         await self.db.commit()
+        await self._invalidate_projects_list_cache(user.id)
         return project

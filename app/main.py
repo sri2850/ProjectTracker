@@ -1,8 +1,15 @@
+import logging
+
 import redis.asyncio as redis
 from fastapi import FastAPI
 
 from app.api.v1.router import router as api_router
 from app.core.exception_handlers import register_exception_handlers
+
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(asctime)s [%(levelname)s] [%(name)s] %(message)s",
+)
 
 
 async def lifespan(app: FastAPI):
