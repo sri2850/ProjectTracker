@@ -84,7 +84,6 @@ class ProjectService:
             raise NotFound(
                 message="Project not found", details={"project_id": project_id}
             )
-        await self._invalidate_projects_list_cache(user.id)
         return project
 
     async def fetch_all_projects(
@@ -126,6 +125,10 @@ class ProjectService:
             meta=ProjectListMeta(total=total, limit=limit, offset=offset),
         )
         await self.redis.set(cache_key, resp.model_dump_json(), ex=CACHE_TTL_SECONDS)
+
+        keys_set = f"projects:list:keys:{CACHE_VER}:{user.id}"
+        await self.redis.sadd(keys_set, cache_key)
+
         return resp
 
     async def update_project_by_id(
